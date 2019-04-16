@@ -40,5 +40,5 @@ example root_dir:
             └── 3096.jpg
 ```
 TODO:
-Add s-measure, e-measure in two days.
+Add s-measure in two days.
 

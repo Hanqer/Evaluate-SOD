@@ -12,8 +12,9 @@ class Eval_thread(threading.Thread):
     def run(self):
         mae = self.Eval_mae()
         max_f = self.Eval_fmeasure()
-        print('{} dataset with {} method get {:.4f} mae, {:.4f} max-fmeasure.'.format(self.dataset, self.method, mae, max_f))
-        self.LOG('{} dataset with {} method get {:.4f} mae, {:.4f} max-fmeasure.'.format(self.dataset, self.method, mae, max_f))
+        max_e = self.Eval_Emeasure()
+        print('{} dataset with {} method get {:.4f} mae, {:.4f} max-fmeasure, {:.4f} max-Emeasure.'.format(self.dataset, self.method, mae, max_f, max_e))
+        self.LOG('{} dataset with {} method get {:.4f} mae, {:.4f} max-fmeasure, {:.4f} max-Emeasure.'.format(self.dataset, self.method, mae, max_f, max_e))
     def Eval_mae(self):
         print('eval[MAE]:{} dataset with {} method.'.format(self.dataset, self.method))
         avg_mae, img_num = 0.0, 0.0
@@ -48,10 +49,35 @@ class Eval_thread(threading.Thread):
             score[score != score] = 0 # for Nan
             
             return score.max().item()
+    def Eval_Emeasure(self):
+        print('eval[EMeasure]:{} dataset with {} method.'.format(self.dataset, self.method))
+        avg_e, img_num = 0.0, 0.0
+        with torch.no_grad():
+            trans = transforms.Compose([transforms.ToTensor()])
+            for pred, gt in self.loader:
+                pred = trans(pred)
+                gt = trans(gt)
+                max_e = self._eval_e(pred, gt, 255)
+                if max_e == max_e:
+                    avg_e += max_e
+                    img_num += 1.0
+                
+            avg_e /= img_num
+            return avg_e
 
     def LOG(self, output):
         with open(self.logfile, 'a') as f:
             f.write(output)
+
+    def _eval_e(self, y_pred, y, num):
+        score = torch.zeros(num)
+        for i in range(num):
+            fm = y_pred - y_pred.mean()
+            gt = y - y.mean()
+            align_matrix = 2 * gt * fm / (gt * gt + fm * fm + 1e-20)
+            enhanced = ((align_matrix + 1) * (align_matrix + 1)) / 4
+            score[i] = torch.sum(enhanced) / (y.numel() - 1 + 1e-20)
+        return score.max()
 
     def _eval_pr(self, y_pred, y, num):
         prec, recall = torch.zeros(num), torch.zeros(num)

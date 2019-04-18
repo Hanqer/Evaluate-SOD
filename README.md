@@ -2,13 +2,13 @@
 ---
 A **One-key** fast evaluation on saliency object detection with Muti-thread and GPU implementation including **MAE, Max F-measure, S-measure, E-measure**.
 
-* Muti-thread
+* Muti-thread in CPU
 * GPU implementation with pytorch
 * One-key evaluation
 
 Usage:
 ```py
-python main.py --root_dir 'your_dir' --save_dir 'your_dir'
+python main.py --root_dir 'your_dir' --save_dir 'your_dir' --methods 'DSS RAS' --dataset 'ECSSD SOD'    (if --methods and --dataset is not set, using all methods and datasets.)
 ```
 **example:**
 ```py

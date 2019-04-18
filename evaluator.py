@@ -14,7 +14,7 @@ class Eval_thread(threading.Thread):
         max_f = self.Eval_fmeasure()
         max_e = self.Eval_Emeasure()
         print('{} dataset with {} method get {:.4f} mae, {:.4f} max-fmeasure, {:.4f} max-Emeasure.'.format(self.dataset, self.method, mae, max_f, max_e))
-        self.LOG('{} dataset with {} method get {:.4f} mae, {:.4f} max-fmeasure, {:.4f} max-Emeasure.'.format(self.dataset, self.method, mae, max_f, max_e))
+        self.LOG('{} dataset with {} method get {:.4f} mae, {:.4f} max-fmeasure, {:.4f} max-Emeasure.\n'.format(self.dataset, self.method, mae, max_f, max_e))
     def Eval_mae(self):
         print('eval[MAE]:{} dataset with {} method.'.format(self.dataset, self.method))
         avg_mae, img_num = 0.0, 0.0

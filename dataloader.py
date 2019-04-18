@@ -12,6 +12,8 @@ class EvalDataset(data.Dataset):
         pred = Image.open(self.image_path[item]).convert('L')
         gt = Image.open(self.label_path[item]).convert('L')
         
+        if pred.size != gt.size:
+            pred = pred.resize(gt.size, Image.BILINEAR)
         return pred, gt
 
     def __len__(self):

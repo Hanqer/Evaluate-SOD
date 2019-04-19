@@ -11,7 +11,7 @@ class EvalDataset(data.Dataset):
     def __getitem__(self, item):
         pred = Image.open(self.image_path[item]).convert('L')
         gt = Image.open(self.label_path[item]).convert('L')
-        
+        # print(self.image_path[item], self.label_path[item])
         if pred.size != gt.size:
             pred = pred.resize(gt.size, Image.BILINEAR)
         return pred, gt

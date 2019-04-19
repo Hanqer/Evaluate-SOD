@@ -32,9 +32,10 @@ def main(cfg):
             threads.append(thread)
     for thread in threads:
         thread.start()
-        while True:
-            if(len(threading.enumerate()) < cfg.threads):
-                break
+        thread.join()
+        # while True:
+        #     if(len(threading.enumerate()) < cfg.threads):
+        #         break
 
 
 if __name__ == "__main__":
@@ -43,6 +44,6 @@ if __name__ == "__main__":
     parser.add_argument('--datasets', type=str, default=None)
     parser.add_argument('--root_dir', type=str, default='/home/hanqi/test/')
     parser.add_argument('--save_dir', type=str, default=None)
-    parser.add_argument('--threads', type=int, default=4) #please set it to harf your cpu cores cause the data prepare and job assignment.
+    parser.add_argument('--threads', type=int, default=1) #please set it to harf your cpu cores cause the data prepare and job assignment.
     config = parser.parse_args()
     main(config)

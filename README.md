@@ -1,6 +1,6 @@
 ## Evaluation on saliency object detection(Evaluate SOD)
 ---
-A **One-key** fast evaluation on saliency object detection with Muti-thread and GPU implementation including **MAE, Max F-measure, S-measure, E-measure**.
+A **One-key** fast evaluation on saliency object detection with GPU implementation including **MAE, Max F-measure, S-measure, E-measure**.
 
 Code are reimplement from matlab version which are available from http://dpfan.net/
 

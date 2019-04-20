@@ -2,16 +2,17 @@
 ---
 A **One-key** fast evaluation on saliency object detection with Muti-thread and GPU implementation including **MAE, Max F-measure, S-measure, E-measure**.
 
-* Muti-thread in CPU
-* GPU implementation with pytorch
+Code are reimplement from matlab version which are available from http://dpfan.net/
+
+* GPU implementation with pytorch with can be easier embedding into eval code.
 * One-key evaluation
 
 Usage:
-```py
+```
 python main.py --root_dir 'your_dir' --save_dir 'your_dir' --methods 'DSS RAS' --dataset 'ECSSD SOD'    (if --methods and --dataset is not set, using all methods and datasets.)
 ```
 **example:**
-```py
+```
 python main.py --root_dir './' --save_dir './'
 ```
 example root_dir:
@@ -39,6 +40,34 @@ example root_dir:
             ├── 2092.jpg
             └── 3096.jpg
 ```
-TODO:
-Add s-measure in two days.
 
+
+If you find the code useful to your research, please cite the following papers.
+
+@inproceedings{fan2018SOC,
+	title={Salient Objects in Clutter: Bringing Salient Object Detection to the Foreground},
+	author={Fan, Deng-Ping and Cheng, Ming-Ming and Liu, Jiang-Jiang and Gao, Shang-Hua and Hou, Qibin and Borji, Ali},
+	booktitle = {European Conference on Computer Vision (ECCV)},
+	year={2018},
+	organization={Springer}
+}
+
+
+@inproceedings{fan2017structure,
+	title={{Structure-measure: A New Way to Evaluate Foreground Maps}},
+	author={Fan, Deng-Ping and Cheng, Ming-Ming and Liu, Yun and Li, Tao and Borji, Ali},
+	booktitle={IEEE International Conference on Computer Vision (ICCV)},
+	pages = {4548-4557},
+	year={2017},
+	note={\url{http://dpfan.net/smeasure/}},
+	organization={IEEE}
+}
+
+@inproceedings{Fan2018Enhanced,
+	author={Fan, Deng-Ping and Gong, Cheng and Cao, Yang and Ren, Bo and Cheng, Ming-Ming and Borji, Ali},
+	title={{Enhanced-alignment Measure for Binary Foreground Map Evaluation}},
+	booktitle={International Joint Conference on Artificial Intelligence (IJCAI)},
+	pages={698--704},
+	note={\url{http://dpfan.net/e-measure/}},
+	year={2018}
+}

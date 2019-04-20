@@ -3,10 +3,9 @@ import torch.nn as nn
 import argparse
 import os.path as osp
 import os
-import threading
 from evaluator import Eval_thread
 from dataloader import EvalDataset
-
+# from concurrent.futures import ThreadPoolExecutor
 def main(cfg):
     root_dir = cfg.root_dir
     if cfg.save_dir is not None:
@@ -28,15 +27,10 @@ def main(cfg):
     for method in method_names:
         for dataset in dataset_names:
             loader = EvalDataset(osp.join(pred_dir, method, dataset), osp.join(gt_dir, dataset))
-            thread = Eval_thread(loader, method, dataset, output_dir)
+            thread = Eval_thread(loader, method, dataset, output_dir, cfg.cuda)
             threads.append(thread)
     for thread in threads:
-        thread.start()
-        thread.join()
-        # while True:
-        #     if(len(threading.enumerate()) < cfg.threads):
-        #         break
-
+        print(thread.run())
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -44,6 +38,6 @@ if __name__ == "__main__":
     parser.add_argument('--datasets', type=str, default=None)
     parser.add_argument('--root_dir', type=str, default='/home/hanqi/test/')
     parser.add_argument('--save_dir', type=str, default=None)
-    parser.add_argument('--threads', type=int, default=1) #please set it to harf your cpu cores cause the data prepare and job assignment.
+    parser.add_argument('--cuda', type=bool, default=True)
     config = parser.parse_args()
     main(config)

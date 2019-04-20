@@ -1,31 +1,38 @@
-import threading
-import torch
-import numpy as np
 import os
+import time
+
+import numpy as np
+import torch
 from torchvision import transforms
-class Eval_thread(threading.Thread):
-    def __init__(self, loader, method, dataset, output_dir):
-        threading.Thread.__init__(self)
+
+
+class Eval_thread():
+    def __init__(self, loader, method, dataset, output_dir, cuda):
         self.loader = loader
         self.method = method
         self.dataset = dataset
+        self.cuda = cuda
         self.logfile = os.path.join(output_dir, 'result.txt')
     def run(self):
+        start_time = time.time()
         mae = self.Eval_mae()
         max_f = self.Eval_fmeasure()
         max_e = self.Eval_Emeasure()
         s = self.Eval_Smeasure()
-        
-        print('{} dataset with {} method get {:.4f} mae, {:.4f} max-fmeasure, {:.4f} max-Emeasure, {:.4f} S-measure..'.format(self.dataset, self.method, mae, max_f, max_e, s))
-        # self.LOG('{} dataset with {} method get {:.4f} mae, {:.4f} max-fmeasure, {:.4f} max-Emeasure.\n'.format(self.dataset, self.method, mae, max_f, max_e))
+        self.LOG('{} dataset with {} method get {:.4f} mae, {:.4f} max-fmeasure, {:.4f} max-Emeasure, {:.4f} S-measure..\n'.format(self.dataset, self.method, mae, max_f, max_e, s))
+        return '[cost:{:.4f}s]{} dataset with {} method get {:.4f} mae, {:.4f} max-fmeasure, {:.4f} max-Emeasure, {:.4f} S-measure..'.format(time.time()-start_time, self.dataset, self.method, mae, max_f, max_e, s)
     def Eval_mae(self):
         print('eval[MAE]:{} dataset with {} method.'.format(self.dataset, self.method))
         avg_mae, img_num = 0.0, 0.0
         with torch.no_grad():
             trans = transforms.Compose([transforms.ToTensor()])
             for pred, gt in self.loader:
-                pred = trans(pred).cuda()
-                gt = trans(gt).cuda()
+                if self.cuda:
+                    pred = trans(pred).cuda()
+                    gt = trans(gt).cuda()
+                else:
+                    pred = trans(pred)
+                    gt = trans(gt)
                 mea = torch.abs(pred - gt).mean()
                 if mea == mea: # for Nan
                     avg_mae += mea
@@ -40,8 +47,12 @@ class Eval_thread(threading.Thread):
         with torch.no_grad():
             trans = transforms.Compose([transforms.ToTensor()])
             for pred, gt in self.loader:
-                pred = trans(pred).cuda()
-                gt = trans(gt).cuda()
+                if self.cuda:
+                    pred = trans(pred).cuda()
+                    gt = trans(gt).cuda()
+                else:
+                    pred = trans(pred)
+                    gt = trans(gt)
                 prec, recall = self._eval_pr(pred, gt, 255)
                 avg_p += prec
                 avg_r += recall
@@ -58,8 +69,12 @@ class Eval_thread(threading.Thread):
         with torch.no_grad():
             trans = transforms.Compose([transforms.ToTensor()])
             for pred, gt in self.loader:
-                pred = trans(pred).cuda()
-                gt = trans(gt).cuda()
+                if self.cuda:
+                    pred = trans(pred).cuda()
+                    gt = trans(gt).cuda()
+                else:
+                    pred = trans(pred)
+                    gt = trans(gt)
                 max_e = self._eval_e(pred, gt, 255)
                 if max_e == max_e:
                     avg_e += max_e
@@ -73,9 +88,23 @@ class Eval_thread(threading.Thread):
         with torch.no_grad():
             trans = transforms.Compose([transforms.ToTensor()])
             for pred, gt in self.loader:
-                pred = trans(pred).cuda()
-                gt = trans(gt).cuda()
-                Q = alpha * self._S_object(pred, gt) + (1-alpha) * self._S_region(pred, gt)
+                if self.cuda:
+                    pred = trans(pred).cuda()
+                    gt = trans(gt).cuda()
+                else:
+                    pred = trans(pred)
+                    gt = trans(gt)
+                y = gt.mean()
+                if y == 0:
+                    x = pred.mean()
+                    Q = 1.0 - x
+                elif y == 1:
+                    x = pred.mean()
+                    Q = x
+                else:
+                    Q = alpha * self._S_object(pred, gt) + (1-alpha) * self._S_region(pred, gt)
+                    if Q.item() < 0:
+                        Q = torch.FLoatTensor([0.0])
                 img_num += 1.0
                 avg_q += Q.item()
             avg_q /= img_num
@@ -85,7 +114,10 @@ class Eval_thread(threading.Thread):
             f.write(output)
 
     def _eval_e(self, y_pred, y, num):
-        score = torch.zeros(num)
+        if self.cuda:
+            score = torch.zeros(num).cuda()
+        else:
+            score = torch.zeros(num)
         for i in range(num):
             fm = y_pred - y_pred.mean()
             gt = y - y.mean()
@@ -95,8 +127,12 @@ class Eval_thread(threading.Thread):
         return score.max()
 
     def _eval_pr(self, y_pred, y, num):
-        prec, recall = torch.zeros(num), torch.zeros(num)
-        thlist = torch.linspace(0, 1 - 1e-10, num).cuda()
+        if self.cuda:
+            prec, recall = torch.zeros(num).cuda(), torch.zeros(num).cuda()
+            thlist = torch.linspace(0, 1 - 1e-10, num).cuda()
+        else:
+            prec, recall = torch.zeros(num), torch.zeros(num)
+            thlist = torch.linspace(0, 1 - 1e-10, num)
         for i in range(num):
             y_temp = (y_pred >= thlist[i]).float()
             tp = (y_temp * y).sum()
@@ -107,13 +143,13 @@ class Eval_thread(threading.Thread):
         fg = torch.where(gt==0, torch.zeros_like(pred), pred)
         bg = torch.where(gt==1, torch.zeros_like(pred), 1-pred)
         o_fg = self._object(fg, gt)
-        o_bg = self._object(bg, gt)
+        o_bg = self._object(bg, 1-gt)
         u = gt.mean()
         Q = u * o_fg + (1-u) * o_bg
         return Q
 
     def _object(self, pred, gt):
-        temp = pred[gt == 0]
+        temp = pred[gt == 1]
         x = temp.mean()
         sigma_x = temp.std()
         score = 2.0 * x / (x * x + 1.0 + sigma_x + 1e-20)
@@ -129,20 +165,29 @@ class Eval_thread(threading.Thread):
         Q3 = self._ssim(p3, gt3)
         Q4 = self._ssim(p4, gt4)
         Q = w1*Q1 + w2*Q2 + w3*Q3 + w4*Q4
+        # print(Q)
         return Q
     
     def _centroid(self, gt):
         rows, cols = gt.size()[-2:]
         gt = gt.view(rows, cols)
         if gt.sum() == 0:
-            X = torch.eye(1).cuda() * (cols // 2)
-            Y = torch.eye(1).cuda() * (rows // 2)
+            if self.cuda:
+                X = torch.eye(1).cuda() * round(cols / 2)
+                Y = torch.eye(1).cuda() * round(rows / 2)
+            else:
+                X = torch.eye(1) * round(cols / 2)
+                Y = torch.eye(1) * round(rows / 2)
         else:
             total = gt.sum()
-            i = torch.from_numpy(np.arange(0,cols)).cuda().float()
-            j = torch.from_numpy(np.arange(0,rows)).cuda().float()
-            X = (gt.sum(dim=0)*i).sum() // total
-            Y = (gt.sum(dim=1)*j).sum() // total
+            if self.cuda:
+                i = torch.from_numpy(np.arange(0,cols)).cuda().float()
+                j = torch.from_numpy(np.arange(0,rows)).cuda().float()
+            else:
+                i = torch.from_numpy(np.arange(0,cols)).float()
+                j = torch.from_numpy(np.arange(0,rows)).float()
+            X = torch.round((gt.sum(dim=0)*i).sum() / total)
+            Y = torch.round((gt.sum(dim=1)*j).sum() / total)
         return X.long(), Y.long()
     
     def _divideGT(self, gt, X, Y):
@@ -150,9 +195,11 @@ class Eval_thread(threading.Thread):
         area = h*w
         gt = gt.view(h, w)
         LT = gt[:Y, :X]
-        RT = gt[:Y, X+1:w]
-        LB = gt[Y+1:h, :X]
-        RB = gt[Y+1:h, X+1:w]
+        RT = gt[:Y, X:w]
+        LB = gt[Y:h, :X]
+        RB = gt[Y:h, X:w]
+        X = X.float()
+        Y = Y.float()
         w1 = X * Y / area
         w2 = (w - X) * Y / area
         w3 = X * (h - Y) / area
@@ -163,9 +210,9 @@ class Eval_thread(threading.Thread):
         h, w = pred.size()[-2:]
         pred = pred.view(h, w)
         LT = pred[:Y, :X]
-        RT = pred[:Y, X+1:w]
-        LB = pred[Y+1:h, :X]
-        RB = pred[Y+1:h, X+1:w]
+        RT = pred[:Y, X:w]
+        LB = pred[Y:h, :X]
+        RB = pred[Y:h, X:w]
         return LT, RT, LB, RB
 
     def _ssim(self, pred, gt):

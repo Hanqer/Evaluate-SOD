@@ -2,7 +2,7 @@
 ---
 A **One-key** fast evaluation on saliency object detection with GPU implementation including **MAE, Max F-measure, S-measure, E-measure**.
 
-Code are reimplement from matlab version which are available from http://dpfan.net/
+Code are reimplemented from the matlab version which are available from http://dpfan.net/
 
 * GPU implementation with pytorch with can be easier embedding into eval code.
 * One-key evaluation
@@ -43,7 +43,7 @@ example root_dir:
 
 
 If you find the code useful to your research, please cite the following papers.
-
+```
 @inproceedings{fan2018SOC,
 	title={Salient Objects in Clutter: Bringing Salient Object Detection to the Foreground},
 	author={Fan, Deng-Ping and Cheng, Ming-Ming and Liu, Jiang-Jiang and Gao, Shang-Hua and Hou, Qibin and Borji, Ali},
@@ -71,3 +71,4 @@ If you find the code useful to your research, please cite the following papers.
 	note={\url{http://dpfan.net/e-measure/}},
 	year={2018}
 }
+```

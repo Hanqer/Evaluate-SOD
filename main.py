@@ -36,7 +36,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--methods', type=str, default=None)
     parser.add_argument('--datasets', type=str, default=None)
-    parser.add_argument('--root_dir', type=str, default='/home/hanqi/test/')
+    parser.add_argument('--root_dir', type=str, default='./')
     parser.add_argument('--save_dir', type=str, default=None)
     parser.add_argument('--cuda', type=bool, default=True)
     config = parser.parse_args()

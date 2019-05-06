@@ -68,6 +68,9 @@ class Eval_thread():
         avg_e, img_num = 0.0, 0.0
         with torch.no_grad():
             trans = transforms.Compose([transforms.ToTensor()])
+            scores = torch.zeros(255)
+            if self.cuda:
+                scores = scores.cuda()
             for pred, gt in self.loader:
                 if self.cuda:
                     pred = trans(pred).cuda()
@@ -75,13 +78,11 @@ class Eval_thread():
                 else:
                     pred = trans(pred)
                     gt = trans(gt)
-                max_e = self._eval_e(pred, gt, 255)
-                if max_e == max_e:
-                    avg_e += max_e
-                    img_num += 1.0
+                scores += self._eval_e(pred, gt, 255)
+                img_num += 1.0
                 
-            avg_e /= img_num
-            return avg_e
+            scores /= img_num
+            return scores.max().item()
     def Eval_Smeasure(self):
         print('eval[SMeasure]:{} dataset with {} method.'.format(self.dataset, self.method))
         alpha, avg_q, img_num = 0.5, 0.0, 0.0
@@ -124,7 +125,7 @@ class Eval_thread():
             align_matrix = 2 * gt * fm / (gt * gt + fm * fm + 1e-20)
             enhanced = ((align_matrix + 1) * (align_matrix + 1)) / 4
             score[i] = torch.sum(enhanced) / (y.numel() - 1 + 1e-20)
-        return score.max()
+        return score
 
     def _eval_pr(self, y_pred, y, num):
         if self.cuda:

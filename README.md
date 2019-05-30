@@ -4,7 +4,7 @@ A **One-key** fast evaluation on saliency object detection with GPU implementati
 
 Code are reimplemented from the matlab version which are available from http://dpfan.net/
 
-* GPU implementation with pytorch witch can be easier embedding into eval code.
+* GPU implementation with pytorch which can be easier embedding into eval code.
 * One-key evaluation
 
 Usage:

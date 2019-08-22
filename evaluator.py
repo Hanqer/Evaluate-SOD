@@ -43,7 +43,8 @@ class Eval_thread():
     def Eval_fmeasure(self):
         print('eval[FMeasure]:{} dataset with {} method.'.format(self.dataset, self.method))
         beta2 = 0.3
-        avg_p, avg_r, img_num = 0.0, 0.0, 0.0
+        avg_f, img_num = 0.0, 0.0
+
         with torch.no_grad():
             trans = transforms.Compose([transforms.ToTensor()])
             for pred, gt in self.loader:
@@ -54,14 +55,11 @@ class Eval_thread():
                     pred = trans(pred)
                     gt = trans(gt)
                 prec, recall = self._eval_pr(pred, gt, 255)
-                avg_p += prec
-                avg_r += recall
+                f_score = (1 + beta2) * prec * recall / (beta2 * prec + recall)
+                f_score[f_score != f_score] = 0 # for Nan
+                avg_f += f_score
                 img_num += 1.0
-            avg_p /= img_num
-            avg_r /= img_num
-            score = (1 + beta2) * avg_p * avg_r / (beta2 * avg_p + avg_r)
-            score[score != score] = 0 # for Nan
-            
+                score = avg_f / img_num
             return score.max().item()
     def Eval_Emeasure(self):
         print('eval[EMeasure]:{} dataset with {} method.'.format(self.dataset, self.method))
@@ -105,7 +103,7 @@ class Eval_thread():
                 else:
                     Q = alpha * self._S_object(pred, gt) + (1-alpha) * self._S_region(pred, gt)
                     if Q.item() < 0:
-                        Q = torch.FLoatTensor([0.0])
+                        Q = torch.FloatTensor([0.0])
                 img_num += 1.0
                 avg_q += Q.item()
             avg_q /= img_num
@@ -117,10 +115,13 @@ class Eval_thread():
     def _eval_e(self, y_pred, y, num):
         if self.cuda:
             score = torch.zeros(num).cuda()
+            thlist = torch.linspace(0, 1 - 1e-10, num).cuda()
         else:
             score = torch.zeros(num)
+            thlist = torch.linspace(0, 1 - 1e-10, num)
         for i in range(num):
-            fm = y_pred - y_pred.mean()
+            y_pred_th = (y_pred >= thlist[i]).float()
+            fm = y_pred_th - y_pred_th.mean()
             gt = y - y.mean()
             align_matrix = 2 * gt * fm / (gt * gt + fm * fm + 1e-20)
             enhanced = ((align_matrix + 1) * (align_matrix + 1)) / 4

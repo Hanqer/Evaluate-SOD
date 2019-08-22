@@ -4,8 +4,15 @@ import os
 from PIL import Image
 class EvalDataset(data.Dataset):
     def __init__(self, img_root, label_root):
-        self.image_path = list(map(lambda x: os.path.join(img_root, x), sorted(os.listdir(img_root))))
-        self.label_path = list(map(lambda x: os.path.join(label_root, x), sorted(os.listdir(label_root))))
+        lst_label = sorted(os.listdir(label_root))
+        lst_pred = sorted(os.listdir(img_root))
+        lst = []
+        for name in lst_label:
+            if name in lst_pred:
+                lst.append(name)
+
+        self.image_path = list(map(lambda x: os.path.join(img_root, x), lst))
+        self.label_path = list(map(lambda x: os.path.join(label_root, x), lst))
         # print(self.image_path)
         # print(self.image_path.sort())
     def __getitem__(self, item):

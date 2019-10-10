@@ -24,8 +24,8 @@ def main(cfg):
         dataset_names = cfg.datasets.split(' ')
     
     threads = []
-    for method in method_names:
-        for dataset in dataset_names:
+    for dataset in dataset_names:
+        for method in method_names:
             loader = EvalDataset(osp.join(pred_dir, method, dataset), osp.join(gt_dir, dataset))
             thread = Eval_thread(loader, method, dataset, output_dir, cfg.cuda)
             threads.append(thread)

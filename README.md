@@ -31,14 +31,14 @@ example root_dir:
 └── pred
     └── dss
         ├── ECSSD
-        │   ├── 0001.jpg
-        │   └── 0002.jpg
+        │   ├── 0001.png
+        │   └── 0002.png
         ├── PASCAL-S
-        │   ├── 1.jpg
-        │   └── 2.jpg
+        │   ├── 1.png
+        │   └── 2.png
         └── SOD
-            ├── 2092.jpg
-            └── 3096.jpg
+            ├── 2092.png
+            └── 3096.png
 ```
 
 

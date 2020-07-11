@@ -103,6 +103,7 @@ class Eval_thread():
                 else:
                     gt[gt>=0.5] = 1
                     gt[gt<0.5] = 0
+                    #print(self._S_object(pred, gt), self._S_region(pred, gt))
                     Q = alpha * self._S_object(pred, gt) + (1-alpha) * self._S_region(pred, gt)
                     if Q.item() < 0:
                         Q = torch.FloatTensor([0.0])
